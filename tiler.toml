@@ -1,0 +1,6 @@
+[app]
+	version = "v 0.1.0"
+	title = "MapCloud Tiler"
+	[output]
+	format ="mbtiles"
+	directory ="output"
