@@ -1,6 +1,13 @@
 [app]
 	version = "v 0.1.0"
 	title = "MapCloud Tiler"
-	[output]
+[output]
 	format ="mbtiles"
 	directory ="output"
+[task]
+	workers = 32
+	savepipe = 32
+	mergepipe = 256 
+	bufsize = 64
+	saving = "off"
+	merging = "on"

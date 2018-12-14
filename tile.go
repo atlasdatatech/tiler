@@ -1,6 +1,11 @@
 package main
 
-import "math"
+import (
+	"math"
+	"sync"
+
+	"github.com/paulmach/orb/maptile"
+)
 
 //TileSize 默认瓦片大小
 const TileSize = 256
@@ -13,13 +18,19 @@ const ZoomMax = 20
 
 //Tile 自定义瓦片存储
 type Tile struct {
-	X, Y, Z uint
-	C       []byte
+	T maptile.Tile
+	C []byte
 }
 
-func (tile Tile) flippedY() uint {
-	zpower := math.Pow(2.0, float64(tile.Z))
-	return uint(zpower) - 1 - tile.Y
+func (tile Tile) flippedY() uint32 {
+	zpower := math.Pow(2.0, float64(tile.T.Z))
+	return uint32(zpower) - 1 - tile.T.Y
+}
+
+//Set a safety set
+type Set struct {
+	sync.RWMutex
+	M maptile.Set
 }
 
 //ZoomCount 级别&瓦片数
@@ -27,9 +38,6 @@ type ZoomCount struct {
 	Level int
 	Count int64
 }
-
-//Zoom 级别列表
-type Zoom []ZoomCount
 
 //TileFormat 切片格式
 type TileFormat uint8

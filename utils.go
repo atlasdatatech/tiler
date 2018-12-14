@@ -16,7 +16,7 @@ import (
 )
 
 func saveToMBTile(tile Tile, db *sql.DB) error {
-	_, err := db.Exec("insert into tiles (zoom_level, tile_column, tile_row, tile_data) values (?, ?, ?, ?);", tile.Z, tile.X, tile.flippedY(), tile.C)
+	_, err := db.Exec("insert into tiles (zoom_level, tile_column, tile_row, tile_data) values (?, ?, ?, ?);", tile.T.Z, tile.T.X, tile.flippedY(), tile.C)
 	if err != nil {
 		return err
 	}
@@ -24,12 +24,11 @@ func saveToMBTile(tile Tile, db *sql.DB) error {
 }
 
 func saveToFiles(tile Tile, rootdir string) error {
-	dir := filepath.Join(rootdir, fmt.Sprintf(`%d`, tile.Z), fmt.Sprintf(`%d`, tile.X))
+	dir := filepath.Join(rootdir, fmt.Sprintf(`%d`, tile.T.Z), fmt.Sprintf(`%d`, tile.T.X))
 	os.MkdirAll(dir, os.ModePerm)
-	fileName := filepath.Join(dir, fmt.Sprintf(`%d`, tile.Y))
+	fileName := filepath.Join(dir, fmt.Sprintf(`%d`, tile.T.Y))
 	err := ioutil.WriteFile(fileName, tile.C, os.ModePerm)
 	if err != nil {
-		log.Println("create tile file error->", err)
 		return err
 	}
 	return nil

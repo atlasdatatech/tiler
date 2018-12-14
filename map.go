@@ -1,6 +1,12 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+	"strings"
+
+	"github.com/paulmach/orb/maptile"
+)
 
 //TileMap 瓦片地图类型
 type TileMap struct {
@@ -8,6 +14,8 @@ type TileMap struct {
 	Name        string
 	Description string
 	Type        string //no types,maybe "tms" or "xyz"
+	Min         int
+	Max         int
 	Format      TileFormat
 	Host        string
 	Schema      string
@@ -35,6 +43,16 @@ func GetTileMapList() map[int]TileMap {
 }
 
 //TileURL 获取瓦片URL
-func (m TileMap) TileURL() string {
-	return m.Host + m.Schema
+func (m TileMap) getTileURL(t maptile.Tile) string {
+	z := int(t.Z)
+	if m.Type == "xyz" {
+		z = m.Max - z
+	}
+	tileURL := strings.Replace(m.Schema, "{x}", strconv.Itoa(int(t.X)), -1)
+	tileURL = strings.Replace(tileURL, "{y}", strconv.Itoa(int(t.Y)), -1)
+	tileURL = strings.Replace(tileURL, "{z}", strconv.Itoa(z), -1)
+	return m.Host + tileURL
+	// return fmt.Sprintf(`http://mt1.google.cn/vt/hl=zh-CN&gl=cn&x=%d&y=%d&zoom=%d&lyrs=m`, t.X, t.Y, 17-t.Z) //google
+	// return fmt.Sprintf(`http://datahive.minedata.cn/data/Buildingmore/%d/%d/%d?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873`, t.Z, t.X, t.Y)
+	// return fmt.Sprintf(`http://datahive.minedata.cn/data/ResidentialPolygon/%d/%d/%d?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873`, t.Z, t.X, t.Y)
 }
