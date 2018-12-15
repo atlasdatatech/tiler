@@ -37,20 +37,19 @@ func InitConf() *viper.Viper {
 var cfgV *viper.Viper
 
 func main() {
-
 	cfgV = InitConf()
-
 	minz, maxz := 10, 12
 	f := loadFeature("./geojson/beijing.geojson")
 	start := time.Now()
 	tm := TileMap{
+		Min:    0,
+		Max:    17,
 		Format: JPG,
 		Type:   "xyz",
 		Host:   "http://mt1.google.cn",
 		Schema: "/vt/hl=zh-CN&gl=cn&x={x}&y={y}&zoom={z}&lyrs=m",
 	}
 	task := NewTask(f.Geometry, minz, maxz, tm)
-	task.SetupMBTileTables()
 	task.Download()
 	secs := time.Since(start).Seconds()
 	fmt.Printf("%.3fs finished...\n", secs)

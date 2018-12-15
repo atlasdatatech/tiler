@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/paulmach/orb"
 	"github.com/paulmach/orb/geojson"
@@ -26,11 +27,12 @@ func saveToMBTile(tile Tile, db *sql.DB) error {
 func saveToFiles(tile Tile, rootdir string) error {
 	dir := filepath.Join(rootdir, fmt.Sprintf(`%d`, tile.T.Z), fmt.Sprintf(`%d`, tile.T.X))
 	os.MkdirAll(dir, os.ModePerm)
-	fileName := filepath.Join(dir, fmt.Sprintf(`%d`, tile.T.Y))
+	fileName := filepath.Join(dir, fmt.Sprintf(`%d.png`, tile.T.Y))
 	err := ioutil.WriteFile(fileName, tile.C, os.ModePerm)
 	if err != nil {
 		return err
 	}
+	log.Println(fileName)
 	return nil
 }
 
@@ -139,7 +141,8 @@ func output(name string, r *geojson.FeatureCollection) {
 }
 
 // output gets called if there is a test failure for debugging.
-func output2(name string, r *geojson.FeatureCollection) {
+func output2(name string, r *geojson.FeatureCollection, wg *sync.WaitGroup) {
+	defer wg.Done()
 	data, err := json.MarshalIndent(r, "", " ")
 	if err != nil {
 		log.Fatalf("error marshalling json: %v", err)

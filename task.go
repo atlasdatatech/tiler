@@ -27,28 +27,31 @@ const MBTileVersion = "1.2"
 
 //Task 下载任务
 type Task struct {
-	ID                        string
-	Name                      string
-	Description               string
-	File                      string
-	Min                       int
-	Max                       int
-	Levels                    []ZoomCount
-	Total                     int64
-	Current                   int64
-	Bar                       *pb.ProgressBar
-	Geom                      orb.Geometry
-	TileMap                   TileMap
-	db                        *sql.DB
-	workerCount               int
-	bufSize                   int
-	savePipeSize              int
-	mergePipeSize             int
-	wg                        sync.WaitGroup
-	abort, pause, play, merge chan struct{}
-	workers, mergingpipe      chan maptile.Tile
-	savingpipe                chan Tile
-	tileSet                   Set
+	ID                     string
+	Name                   string
+	Description            string
+	File                   string
+	Min                    int
+	Max                    int
+	Levels                 []ZoomCount
+	Total                  int64
+	Current                int64
+	Bar                    *pb.ProgressBar
+	Geom                   orb.Geometry
+	TileMap                TileMap
+	db                     *sql.DB
+	workerCount            int
+	savePipeSize           int
+	mergePipeSize, bufSize int
+	wg                     sync.WaitGroup
+	abort, pause, play     chan struct{}
+	workers                chan maptile.Tile
+	mergingpipe, mergebuf  chan maptile.Tile
+	tickmerge              chan struct{}
+	savingpipe             chan Tile
+	tileSet                Set
+	mergepipe              bool
+	outformat              string
 }
 
 //NewTask 创建下载任务
@@ -75,18 +78,20 @@ func NewTask(geom orb.Geometry, minzoom, maxzoom int, m TileMap) *Task {
 	task.abort = make(chan struct{})
 	task.pause = make(chan struct{})
 	task.play = make(chan struct{})
-	task.merge = make(chan struct{})
+	task.tickmerge = make(chan struct{})
 
 	task.workerCount = cfgV.GetInt("task.workers")
 	task.mergePipeSize = cfgV.GetInt("task.mergepipe")
 	task.savePipeSize = cfgV.GetInt("task.savepipe")
-	task.bufSize = cfgV.GetInt("task.bufsize")
 	task.workers = make(chan maptile.Tile, task.workerCount)
 	task.mergingpipe = make(chan maptile.Tile, task.mergePipeSize)
 	task.savingpipe = make(chan Tile, task.savePipeSize)
-
+	task.bufSize = cfgV.GetInt("task.mergebuf")
+	task.mergebuf = make(chan maptile.Tile, task.bufSize)
 	task.tileSet = Set{M: make(maptile.Set)}
 
+	task.mergepipe = cfgV.GetBool("task.merging")
+	task.outformat = cfgV.GetString("output.format")
 	return &task
 }
 
@@ -185,52 +190,76 @@ func (task *Task) playFun() {
 //SavePipe 保存瓦片管道
 func (task *Task) savePipe() {
 	for tile := range task.savingpipe {
-		task.saveTile(tile)
+		err := saveToMBTile(tile, task.db)
+		if err != nil {
+			log.Errorf(`save %v tile to mbtiles db error ~ %s`, tile.T, err)
+		}
 	}
 }
 
 //SaveTile 保存瓦片
 func (task *Task) saveTile(tile Tile) error {
-	t := "files" //or files
-	switch t {
-	case "mbtiles":
-		err := saveToMBTile(tile, task.db)
-		if err != nil {
-			log.Errorf(`save %v tile to mbtiles db error ~ %s`, tile.T, err)
-		}
-	case "files":
-		err := saveToFiles(tile, filepath.Base(task.File))
-		if err != nil {
-			log.Errorf("create %v tile file error ~ %s\n", tile.T, err)
-		}
+	defer task.wg.Done()
+	err := saveToFiles(tile, filepath.Base(task.File))
+	if err != nil {
+		log.Errorf("create %v tile file error ~ %s\n", tile.T, err)
 	}
-
 	return nil
 }
 
 //MergePipe 瓦片合并管道
 func (task *Task) mergePipe() {
-	select {
-	case <-task.merge:
-		c := len(task.mergingpipe)
-		apSet := make(maptile.Set)
-		for i := c; i > 0; i-- {
-			t := <-task.mergingpipe
-			apSet[t] = true
+	tickmerge := func(buf chan maptile.Tile) {
+		bufsize := len(buf)
+		fmt.Println(bufsize)
+		for n := bufsize; n > 0; n-- {
+			task.tileSet.M[<-buf] = true
 		}
 		task.wg.Add(1)
-		go task.mergeTiles(apSet)
+		go task.mergeTiles()
+	}
+	go func() {
+		for {
+			select {
+			case <-task.tickmerge:
+				log.Println("some tickmerge, starting merge...")
+				tickmerge(task.mergebuf)
+				task.wg.Done()
+			}
+		}
+	}()
+	for tile := range task.mergingpipe {
+		select {
+		case task.mergebuf <- tile:
+		default:
+			log.Println("buffer overflow, starting merge...")
+			tickmerge(task.mergebuf)
+		}
 	}
 }
 
 //MergeTiles 合并下载瓦片范围
-func (task *Task) mergeTiles(set maptile.Set) {
-	defer task.wg.Done()
+func (task *Task) mergeTiles() {
+	if task.mergepipe {
+		defer task.wg.Done()
+	}
 	//merge up append set
-	log.Infof("merging up appended tile set, capacity:%d ~\n", len(set))
+	log.Infof("merging up appended tile set, capacity:%d ~\n", len(task.tileSet.M))
 	task.tileSet.Lock()
-	task.tileSet.M = tilecover.MergeUpAppend(task.tileSet.M, set, 0)
+	task.tileSet.M = tilecover.MergeUpAppend(task.tileSet.M, 0)
 	task.tileSet.Unlock()
+}
+
+//MergeTiles 合并下载瓦片范围
+func (task *Task) exportMergeTiles(z ZoomCount) {
+	//merge up append set
+	task.tileSet.Lock()
+	tmp := task.tileSet.M
+	fmt.Println(len(task.tileSet.M))
+	task.tileSet.M = make(maptile.Set)
+	task.tileSet.Unlock()
+	task.wg.Add(1)
+	go output2(task.ID+"-"+strconv.Itoa(z.Level)+"-"+strconv.Itoa(int(z.Count)), tmp.ToFeatureCollection(), &task.wg)
 }
 
 //tileFetcher 瓦片加载器
@@ -241,6 +270,7 @@ func (task *Task) tileFetcher(t maptile.Tile) {
 	}()
 	// start := time.Now()
 	url := task.TileMap.getTileURL(t)
+	log.Println(url)
 	resp, err := http.Get(url)
 	if err != nil {
 		log.Errorf(`fetch %v tile error ~ %s\n`, t, err)
@@ -260,30 +290,19 @@ func (task *Task) tileFetcher(t maptile.Tile) {
 		T: t,
 		C: body,
 	}
-	saving := cfgV.GetString("task.saving")
-	if saving == "on" {
+	//enable savingpipe
+	if task.outformat == "mbtiles" {
 		task.savingpipe <- tile
 	} else {
+		task.wg.Add(1)
 		task.saveTile(tile)
 	}
-	//add to meger
-	merging := cfgV.GetString("task.merging")
-	if merging == "on" {
-		select {
-		case task.mergingpipe <- t:
-		default: //mergingpipe full
-			c := len(task.mergingpipe)
-			apSet := make(maptile.Set)
-			for i := c; i > 0; i-- {
-				t := <-task.mergingpipe
-				apSet[t] = true
-			}
-			task.wg.Add(1)
-			go task.mergeTiles(apSet)
-		}
+	//enable mergingpipe
+	if task.mergepipe {
+		task.mergingpipe <- t
 	}
 	// secs := time.Since(start).Seconds()
-	// fmt.Printf("tile %v, %.3fs finished...\n", t, secs)
+	// fmt.Printf("tile %v, %.3fs, %d, %s ...\n", t, secs, len(body), url)
 }
 
 //DownloadZoom 下载指定层级
@@ -297,7 +316,6 @@ func (task *Task) downloadZoom(geom orb.Geometry, zoom ZoomCount) {
 
 	for tile := range tilelist {
 		// log.Infof(`fetching tile %v ~`, tile)
-
 		select {
 		case task.workers <- tile:
 			bar.Increment()
@@ -319,28 +337,33 @@ func (task *Task) downloadZoom(geom orb.Geometry, zoom ZoomCount) {
 		}
 	}
 	task.wg.Wait()
-
-	c := len(task.mergingpipe)
-	apSet := make(maptile.Set)
-	for i := c; i > 0; i-- {
-		t := <-task.mergingpipe
-		apSet[t] = true
+	if task.mergepipe {
+		// 合并该级别管道内剩余瓦片
+		task.wg.Add(1)
+		task.tickmerge <- struct{}{}
+		task.wg.Wait()
+		task.exportMergeTiles(zoom)
+		task.wg.Wait()
 	}
-	task.wg.Add(1)
-	go task.mergeTiles(apSet)
-	task.wg.Wait()
 	bar.FinishPrint(fmt.Sprintf("task %s zoom %d finished ~", task.ID, zoom.Level))
 }
 
 //Download 开启下载任务
 func (task *Task) Download() {
 	//g orb.Geometry, minz int, maxz int
-	task.Bar = pb.New64(task.Total)
+	task.Bar = pb.New64(task.Total).Prefix("\nTask : ")
 	task.Bar.Start()
-	go task.mergePipe()
+	if task.outformat == "mbtiles" {
+		task.SetupMBTileTables()
+	}
+	go task.savePipe()
+	if task.mergepipe {
+		go task.mergePipe()
+	}
 	for _, zoom := range task.Levels {
 		task.downloadZoom(task.Geom, zoom)
 	}
+	task.wg.Wait()
 	task.Bar.FinishPrint(fmt.Sprintf(`task %s finished ~`, task.ID))
 }
 
