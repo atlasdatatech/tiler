@@ -138,21 +138,21 @@ func main() {
 	for z := 0; z <= 6; z++ {
 		c := loadCollection("./geojson/z1-6.global.geojson")
 		layer := Layer{
-			URL: "http://datahive.minedata.cn/mergeddata/Adminflag,Annotation,Poi,Ptline,Railway,Road,Villtown,Worldannotation/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",
+			// URL: "http://datahive.minedata.cn/mergeddata/Adminflag,Annotation,Poi,Ptline,Railway,Road,Villtown,Worldannotation/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",
 			// URL: "http://datahive.minedata.cn/data/ResidentialPolygon/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",
-			// URL:        "http://tiles.emapgo.cn/data/emg.china-streets/{z}/{x}/{y}.pbf",
+			URL:        "http://tiles.emapgo.cn/data/emg.china-streets/{z}/{x}/{y}.pbf",
 			Zoom:       z,
 			Collection: c,
 		}
 		layers = append(layers, layer)
 	}
 
-	for z := 7; z <= 14; z++ {
+	for z := 7; z <= 16; z++ {
 		c := loadCollection("./geojson/z7-10.china.geojson")
 		layer := Layer{
-			URL: "http://datahive.minedata.cn/mergeddata/Adminflag,Annotation,Poi,Ptline,Railway,Road,Villtown,Worldannotation/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",
+			// URL: "http://datahive.minedata.cn/mergeddata/Adminflag,Annotation,Poi,Ptline,Railway,Road,Villtown,Worldannotation/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",
 			// URL: "http://datahive.minedata.cn/data/ResidentialPolygon/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",
-			// URL:        "http://tiles.emapgo.cn/data/emg.china-streets/{z}/{x}/{y}.pbf",
+			URL:        "http://tiles.emapgo.cn/data/emg.china-streets/{z}/{x}/{y}.pbf",
 			Zoom:       z,
 			Collection: c,
 		}
