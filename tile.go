@@ -4,6 +4,8 @@ import (
 	"math"
 	"sync"
 
+	"github.com/paulmach/orb"
+
 	"github.com/paulmach/orb/maptile"
 )
 
@@ -22,7 +24,7 @@ type Tile struct {
 	C []byte
 }
 
-func (tile Tile) flippedY() uint32 {
+func (tile Tile) flipY() uint32 {
 	zpower := math.Pow(2.0, float64(tile.T.Z))
 	return uint32(zpower) - 1 - tile.T.Y
 }
@@ -33,10 +35,12 @@ type Set struct {
 	M maptile.Set
 }
 
-//ZoomCount 级别&瓦片数
-type ZoomCount struct {
-	Level int
-	Count int64
+//Layer 级别&瓦片数
+type Layer struct {
+	URL        string
+	Zoom       int
+	Count      int64
+	Collection orb.Collection
 }
 
 //TileFormat 切片格式

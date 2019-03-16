@@ -7,6 +7,3 @@
 [task]
 	workers = 32
 	savepipe = 32
-	mergepipe = 64
-	mergebuf = 256 
-	merging = true

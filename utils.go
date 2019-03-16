@@ -17,7 +17,7 @@ import (
 )
 
 func saveToMBTile(tile Tile, db *sql.DB) error {
-	_, err := db.Exec("insert into tiles (zoom_level, tile_column, tile_row, tile_data) values (?, ?, ?, ?);", tile.T.Z, tile.T.X, tile.flippedY(), tile.C)
+	_, err := db.Exec("insert into tiles (zoom_level, tile_column, tile_row, tile_data) values (?, ?, ?, ?);", tile.T.Z, tile.T.X, tile.flipY(), tile.C)
 	if err != nil {
 		return err
 	}
@@ -114,6 +114,25 @@ func loadFeatureCollection(path string) *geojson.FeatureCollection {
 	fc.Features = fc.Features[:count]
 
 	return fc
+}
+
+func loadCollection(path string) orb.Collection {
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		log.Fatalf("unable to read file: %v", err)
+	}
+
+	fc, err := geojson.UnmarshalFeatureCollection(data)
+	if err != nil {
+		log.Fatalf("unable to unmarshal feature: %v", err)
+	}
+
+	var collection orb.Collection
+	for _, f := range fc.Features {
+		collection = append(collection, f.Geometry)
+	}
+
+	return collection
 }
 
 // output gets called if there is a test failure for debugging.
