@@ -11,7 +11,7 @@
 [tm]
 	min = 0
 	max = 17
-	format = "png"
+	format = "pbf"
 	schema = "xyz"
 	url = "http://mt0.google.cn/vt/lyrs=s&x={x}&y={y}&z={z}"
 	# url="http://datahive.minedata.cn/data/Buildingmore/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5874"
