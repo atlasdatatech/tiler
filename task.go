@@ -97,7 +97,7 @@ func NewTask(layers []Layer, m TileMap) *Task {
 
 //Bound 范围
 func (task *Task) Bound() orb.Bound {
-	bound := orb.Bound{}
+	bound := orb.Bound{Min: orb.Point{1, 1}, Max: orb.Point{-1, -1}}
 	for _, layer := range task.Layers {
 		for _, g := range layer.Collection {
 			bound = bound.Union(g.Bound())
@@ -109,7 +109,7 @@ func (task *Task) Bound() orb.Bound {
 //Center 中心点
 func (task *Task) Center() orb.Point {
 	layer := task.Layers[len(task.Layers)-1]
-	bound := orb.Bound{}
+	bound := orb.Bound{Min: orb.Point{1, 1}, Max: orb.Point{-1, -1}}
 	for _, g := range layer.Collection {
 		bound = bound.Union(g.Bound())
 	}
