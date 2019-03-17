@@ -1,0 +1,32 @@
+[app]
+	version = "v 0.1.0"
+	title = "MapCloud Tiler"
+[output]
+	format ="mbtiles"
+	directory ="output"
+[task]
+	workers = 4
+	savepipe = 8
+
+[tm]
+	min = 0
+	max = 17
+	format = "png"
+	schema = "xyz"
+	url = "http://mt0.google.cn/vt/lyrs=s&x={x}&y={y}&z={z}"
+	# url="http://datahive.minedata.cn/data/Buildingmore/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5874"
+[[lrs]]
+	min = 0
+	max = 5
+	geojson = "./geojson/global.geojson"
+#	url="http://datahive.minedata.cn/data/Buildingmore/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5874"
+# [[lrs]]
+# 	min = 0
+# 	max = 6
+# 	geojson = "./geojson/beijing.geojson"
+# 	url="http://datahive.minedata.cn/data/Buildingmore/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5874"
+# [[lrs]]
+# 	min = 0
+# 	max = 6
+# 	geojson = "./geojson/beijing.geojson"
+# 	url="http://datahive.minedata.cn/data/Buildingmore/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5874"
