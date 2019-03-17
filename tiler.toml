@@ -5,5 +5,5 @@
 	format ="mbtiles"
 	directory ="output"
 [task]
-	workers = 16
+	workers = 4
 	savepipe = 32

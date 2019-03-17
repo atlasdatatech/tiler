@@ -692,7 +692,6 @@ func (task *Task) tileFetcher(t maptile.Tile, url string) {
 		return
 	}
 	defer resp.Body.Close()
-	log.Infof("fetch :%s ~", pbf)
 	if resp.StatusCode != 200 {
 		log.Errorf("fetch %v tile error, status code: %d ~", pbf, resp.StatusCode)
 		return
