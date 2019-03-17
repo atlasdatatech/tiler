@@ -16,7 +16,7 @@ type TileMap struct {
 	Schema      string //no types,maybe "xyz" or "tms"
 	Min         int
 	Max         int
-	Format      TileFormat
+	Format      string
 	URL         string
 	Token       string
 	//such as porxy...

@@ -21,6 +21,7 @@ import (
 	"github.com/paulmach/orb/maptile"
 	"github.com/paulmach/orb/maptile/tilecover"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 	"github.com/teris-io/shortid"
 	pb "gopkg.in/cheggaaa/pb.v1"
 )
@@ -83,14 +84,14 @@ func NewTask(layers []Layer, m TileMap) *Task {
 	task.pause = make(chan struct{})
 	task.play = make(chan struct{})
 
-	task.workerCount = cfgV.GetInt("task.workers")
-	task.savePipeSize = cfgV.GetInt("task.savepipe")
+	task.workerCount = viper.GetInt("task.workers")
+	task.savePipeSize = viper.GetInt("task.savepipe")
 	task.workers = make(chan maptile.Tile, task.workerCount)
 	task.savingpipe = make(chan Tile, task.savePipeSize)
-	task.bufSize = cfgV.GetInt("task.mergebuf")
+	task.bufSize = viper.GetInt("task.mergebuf")
 	task.tileSet = Set{M: make(maptile.Set)}
 
-	task.outformat = cfgV.GetString("output.format")
+	task.outformat = viper.GetString("output.format")
 	return &task
 }
 
@@ -125,7 +126,7 @@ func (task *Task) MetaItems() map[string]string {
 		"description": task.Description,
 		"attribution": `<a href="http://www.atlasdata.cn/" target="_blank">&copy; MapCloud</a>`,
 		"basename":    task.TileMap.Name,
-		"format":      task.TileMap.Format.String(),
+		"format":      task.TileMap.Format,
 		"type":        task.TileMap.Schema,
 		"pixel_scale": strconv.Itoa(TileSize),
 		"version":     MBTileVersion,
@@ -587,9 +588,9 @@ func (task *Task) MetaItems() map[string]string {
 func (task *Task) SetupMBTileTables() error {
 
 	if task.File == "" {
-		outdir := cfgV.GetString("output.directory")
+		outdir := viper.GetString("output.directory")
 		os.MkdirAll(outdir, os.ModePerm)
-		task.File = filepath.Join(outdir, task.ID+".mbtiles")
+		task.File = filepath.Join(outdir, task.ID+"."+task.TileMap.Name+".mbtiles")
 	}
 	os.Remove(task.File)
 	db, err := sql.Open("sqlite3", task.File)

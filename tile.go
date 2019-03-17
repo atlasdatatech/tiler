@@ -43,48 +43,12 @@ type Layer struct {
 	Collection orb.Collection
 }
 
-//TileFormat 切片格式
-type TileFormat uint8
-
 // Constants representing TileFormat types
 const (
-	UNKNOWN TileFormat = iota // UNKNOWN TileFormat cannot be determined from first few bytes of tile
-	GZIP                      // encoding = gzip
-	ZLIB                      // encoding = deflate
-	PNG
-	JPG
-	PBF
-	WEBP
+	GZIP string = "gzip" // encoding = gzip
+	ZLIB        = "zlib" // encoding = deflate
+	PNG         = "png"
+	JPG         = "jpg"
+	PBF         = "pbf"
+	WEBP        = "webp"
 )
-
-// String returns a string representing the TileFormat
-func (t TileFormat) String() string {
-	switch t {
-	case PNG:
-		return "png"
-	case JPG:
-		return "jpg"
-	case PBF:
-		return "pbf"
-	case WEBP:
-		return "webp"
-	default:
-		return ""
-	}
-}
-
-// ContentType returns the MIME content type of the tile
-func (t TileFormat) ContentType() string {
-	switch t {
-	case PNG:
-		return "image/png"
-	case JPG:
-		return "image/jpeg"
-	case PBF:
-		return "application/x-protobuf" // Content-Encoding header must be gzip
-	case WEBP:
-		return "image/webp"
-	default:
-		return ""
-	}
-}
