@@ -688,10 +688,11 @@ func (task *Task) tileFetcher(t maptile.Tile, url string) {
 	pbf := prep(t, url)
 	resp, err := http.Get(pbf)
 	if err != nil {
-		log.Errorf("fetch url:%s error, details: %s ~", url, err)
+		log.Errorf("fetch :%s error, details: %s ~", pbf, err)
 		return
 	}
 	defer resp.Body.Close()
+	log.Infof("fetch :%s ~", pbf)
 	if resp.StatusCode != 200 {
 		log.Errorf("fetch %v tile error, status code: %d ~", pbf, resp.StatusCode)
 		return
