@@ -9,24 +9,28 @@
 	savepipe = 8
 
 [tm]
+	name = "minedata"
 	min = 0
 	max = 17
 	format = "pbf"
 	schema = "xyz"
-	url = "http://mt0.google.cn/vt/lyrs=s&x={x}&y={y}&z={z}"
-	# url="http://datahive.minedata.cn/data/Buildingmore/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5874"
+	json = '{"name":"abc"}'
+	url = "http://tiles.emapgo.cn/data/emg.china-streets/{z}/{x}/{y}.pbf"
+	# url= "http://mt0.google.cn/vt/lyrs=s&x={x}&y={y}&z={z}"
+	# url= "http://datahive.minedata.cn/data/Buildingmore/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5874"
+	# url= "http://datahive.minedata.cn/mergeddata/Adminflag,Annotation,Poi,Ptline,Railway,Road,Villtown,Worldannotation/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",//merge8
+	# url= "http://datahive.minedata.cn/data/Waterface/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",
+	# url= "http://datahive.minedata.cn/data/Greenface/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",
+	# url= "http://datahive.minedata.cn/data/Landuse/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",            //>12
+	# url= "http://datahive.minedata.cn/data/Ptstop/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",             //>13
+	# url= "http://datahive.minedata.cn/data/ResidentialPolygon/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873", //>13
+	# url= "http://datahive.minedata.cn/data/Buildingmore/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5874", //>14
+	# url= "http://datahive.minedata.cn/data/Zlevel/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",             //>15
+	# url= "http://datahive.minedata.cn/data/Subwaypolygon/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",      //>15
+	# url= "http://datahive.minedata.cn/data/Ptexit/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",             //>16
+	# url= "http://datahive.minedata.cn/data/Trafficlight/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",       //>16
+	# url= "http://tiles.emapgo.cn/data/emg.china-streets/{z}/{x}/{y}.pbf",
 [[lrs]]
 	min = 0
 	max = 5
-	geojson = "./geojson/global.geojson"
-#	url="http://datahive.minedata.cn/data/Buildingmore/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5874"
-# [[lrs]]
-# 	min = 0
-# 	max = 6
-# 	geojson = "./geojson/beijing.geojson"
-# 	url="http://datahive.minedata.cn/data/Buildingmore/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5874"
-# [[lrs]]
-# 	min = 0
-# 	max = 6
-# 	geojson = "./geojson/beijing.geojson"
-# 	url="http://datahive.minedata.cn/data/Buildingmore/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5874"
+	geojson = "c.geojson"

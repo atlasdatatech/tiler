@@ -76,12 +76,14 @@ func main() {
 	initConf(cf)
 	start := time.Now()
 	tm := TileMap{
+		Name:   viper.GetString("tm.name"),
 		Min:    viper.GetInt("tm.min"),
 		Max:    viper.GetInt("tm.max"),
 		Format: viper.GetString("tm.format"),
 		Schema: viper.GetString("tm.schema"),
+		JSON:   viper.GetString("tm.json"),
 		URL:    viper.GetString("tm.url"),
-		// URL:    "http://mt0.google.cn/vt/lyrs=s&hl=zh-CN&x={x}&y={y}&z={z}", ///data/landcover/{z}/{x}/{y}.pbf?key=hWWfWrAiWGtv68r8wA6D
+		// URL: "http://mt0.google.cn/vt/lyrs=s&hl=zh-CN&x={x}&y={y}&z={z}", ///data/landcover/{z}/{x}/{y}.pbf?key=hWWfWrAiWGtv68r8wA6D
 		// URL: "http://tiles.emapgo.cn/data/emg.china-streets/{z}/{x}/{y}.pbf",
 		// URL: "http://datahive.minedata.cn/data/Buildingmore/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873", //>14
 		// URL: "http://datahive.minedata.cn/mergeddata/Adminflag,Annotation,Poi,Ptline,Railway,Road,Villtown,Worldannotation/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",
@@ -102,10 +104,7 @@ func main() {
 		for z := lrs.Min; z <= lrs.Max; z++ {
 			c := loadCollection(lrs.Geojson)
 			layer := Layer{
-				URL: lrs.URL,
-				// URL: "http://datahive.minedata.cn/mergeddata/Adminflag,Annotation,Poi,Ptline,Railway,Road,Villtown,Worldannotation/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",
-				// URL: "http://datahive.minedata.cn/data/ResidentialPolygon/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",
-				// URL:        "http://tiles.emapgo.cn/data/emg.china-streets/{z}/{x}/{y}.pbf",
+				URL:        lrs.URL,
 				Zoom:       z,
 				Collection: c,
 			}
@@ -135,10 +134,10 @@ func main() {
 	// 		// URL: "http://datahive.minedata.cn/mergeddata/Adminflag,Annotation,Poi,Ptline,Railway,Road,Villtown,Worldannotation/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",//merge8
 	// 		// URL: "http://datahive.minedata.cn/data/Waterface/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",
 	// 		// URL: "http://datahive.minedata.cn/data/Greenface/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",
-	// 		// URL: "http://datahive.minedata.cn/data/Landuse/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",            //>13
+	// 		// URL: "http://datahive.minedata.cn/data/Landuse/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",            //>12
 	// 		// URL: "http://datahive.minedata.cn/data/Ptstop/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",             //>13
 	// 		// URL: "http://datahive.minedata.cn/data/ResidentialPolygon/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873", //>13
-	// 		URL: "http://datahive.minedata.cn/data/Buildingmore/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5874", //>14
+	// 		// URL: "http://datahive.minedata.cn/data/Buildingmore/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5874", //>14
 	// 		// URL: "http://datahive.minedata.cn/data/Zlevel/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",             //>15
 	// 		// URL: "http://datahive.minedata.cn/data/Subwaypolygon/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",      //>15
 	// 		// URL: "http://datahive.minedata.cn/data/Ptexit/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",             //>16

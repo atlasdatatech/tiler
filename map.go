@@ -17,6 +17,7 @@ type TileMap struct {
 	Min         int
 	Max         int
 	Format      string
+	JSON        string
 	URL         string
 	Token       string
 	//such as porxy...
