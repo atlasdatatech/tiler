@@ -9,10 +9,10 @@ import (
 	"path/filepath"
 	"sync"
 
+	"github.com/atlasdatatech/orb/maptile/tilecover"
 	"github.com/paulmach/orb"
 	"github.com/paulmach/orb/geojson"
 	"github.com/paulmach/orb/maptile"
-	"github.com/paulmach/orb/maptile/tilecover"
 	log "github.com/sirupsen/logrus"
 )
 

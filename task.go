@@ -15,11 +15,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/atlasdatatech/orb/maptile/tilecover"
 	"github.com/paulmach/orb"
 	"github.com/paulmach/orb/clip"
 	"github.com/paulmach/orb/geojson"
 	"github.com/paulmach/orb/maptile"
-	"github.com/paulmach/orb/maptile/tilecover"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/teris-io/shortid"
@@ -145,7 +145,7 @@ func (task *Task) SetupMBTileTables() error {
 	if task.File == "" {
 		outdir := viper.GetString("output.directory")
 		os.MkdirAll(outdir, os.ModePerm)
-		task.File = filepath.Join(outdir, fmt.Sprintf("%s%d-%d.%s.mbtiles", task.Name, task.Min, task.Max, task.ID))
+		task.File = filepath.Join(outdir, fmt.Sprintf("%s-z%d-%d.%s.mbtiles", task.Name, task.Min, task.Max, task.ID))
 	}
 	os.Remove(task.File)
 	db, err := sql.Open("sqlite3", task.File)
@@ -265,20 +265,24 @@ func (task *Task) tileFetcher(t maptile.Tile, url string) {
 		log.Warnf("nil tile %v ~", t)
 		return //zero byte tiles n
 	}
-
-	var buf bytes.Buffer
-	zw := gzip.NewWriter(&buf)
-	_, err = zw.Write(body)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if err := zw.Close(); err != nil {
-		log.Fatal(err)
-	}
 	tile := Tile{
 		T: t,
-		C: buf.Bytes(),
+		C: body,
 	}
+	if task.TileMap.Format == PBF {
+
+		var buf bytes.Buffer
+		zw := gzip.NewWriter(&buf)
+		_, err = zw.Write(body)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if err := zw.Close(); err != nil {
+			log.Fatal(err)
+		}
+		tile.C = buf.Bytes()
+	}
+
 	//enable savingpipe
 	if task.outformat == "mbtiles" {
 		task.savingpipe <- tile
@@ -287,7 +291,7 @@ func (task *Task) tileFetcher(t maptile.Tile, url string) {
 		task.saveTile(tile)
 	}
 	secs := time.Since(start).Seconds()
-	fmt.Printf("\ntile %v, %.3fs, %.2f kb, %s ...\n", t, secs, float32(len(buf.Bytes()))/1024.0, pbf)
+	fmt.Printf("\ntile %v, %.3fs, %.2f kb, %s ...\n", t, secs, float32(len(body))/1024.0, pbf)
 }
 
 //DownloadZoom 下载指定层级

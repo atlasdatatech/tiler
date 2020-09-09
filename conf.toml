@@ -9,13 +9,14 @@
 	savepipe = 8
 
 [tm]
-	name = "minedata"
+	name = "mapbox-terrain-rgb"
 	min = 0
-	max = 17
-	format = "pbf"
+	max = 10
+	format = "png"
 	schema = "xyz"
-	json = '{"name":"abc"}'
-	url = "http://tiles.emapgo.cn/data/emg.china-streets/{z}/{x}/{y}.pbf"
+	# json = '{"name":"abc"}'
+	url = "https://api.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.pngraw?access_token=pk.eyJ1IjoiZXhsaW1pdDAwIiwiYSI6ImNqZndieTB4MTA2YzEzNG1zdXNvcDB0OW8ifQ.ByBDMvSiVoaSy2wV9gJ5FA"
+	# url = "http://tiles.emapgo.cn/data/emg.china-streets/{z}/{x}/{y}.pbf"
 	# url= "http://mt0.google.cn/vt/lyrs=s&x={x}&y={y}&z={z}"
 	# url= "http://datahive.minedata.cn/data/Buildingmore/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5874"
 	# url= "http://datahive.minedata.cn/mergeddata/Adminflag,Annotation,Poi,Ptline,Railway,Road,Villtown,Worldannotation/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",//merge8
@@ -32,5 +33,5 @@
 	# url= "http://tiles.emapgo.cn/data/emg.china-streets/{z}/{x}/{y}.pbf",
 [[lrs]]
 	min = 0
-	max = 5
-	geojson = "c.geojson"
+	max = 10
+	geojson = "./geojson/global.geojson"
