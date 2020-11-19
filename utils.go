@@ -9,10 +9,10 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/atlasdatatech/orb/maptile/tilecover"
 	"github.com/paulmach/orb"
 	"github.com/paulmach/orb/geojson"
 	"github.com/paulmach/orb/maptile"
+	"github.com/paulmach/orb/maptile/tilecover"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -38,11 +38,11 @@ func saveToFiles(tile Tile, rootdir string) error {
 }
 
 func optimizeConnection(db *sql.DB) error {
-	_, err := db.Exec("PRAGMA synchronous=0")
-	if err != nil {
-		return err
-	}
-	_, err = db.Exec("PRAGMA locking_mode=EXCLUSIVE")
+	// _, err := db.Exec("PRAGMA synchronous=0")
+	// if err != nil {
+	// 	return err
+	// }
+	_, err := db.Exec("PRAGMA locking_mode=EXCLUSIVE")
 	if err != nil {
 		return err
 	}

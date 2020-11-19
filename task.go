@@ -15,11 +15,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/atlasdatatech/orb/maptile/tilecover"
 	"github.com/paulmach/orb"
 	"github.com/paulmach/orb/clip"
 	"github.com/paulmach/orb/geojson"
 	"github.com/paulmach/orb/maptile"
+	"github.com/paulmach/orb/maptile/tilecover"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"github.com/teris-io/shortid"
