@@ -1,55 +1,47 @@
 [app]
-version = "v 0.1.0"
-title = "MapCloud Tiler"
-
+	version = "v 0.1.0"
+	title = "MapCloud Tiler"
 [output]
-format = "mbtiles"
-directory = "output"
-
+	#can be mbtiles/file
+	format ="mbtiles"
+	#the output dir
+	directory ="output"
 [task]
-workers = 4
-savepipe = 8
+	#number of fetchers
+	workers = 16
+	#number of savers
+	savepipe = 1
 
 [tm]
-name = "mt0.google.cn"
-min = 0
-max = 10
-format = "jpg"
-schema = "xyz"
-# json = '{"name":"abc"}'
-# url = "https://api.mapbox.com/v4/mapbox.terrain-rgb/{z}/{x}/{y}.pngraw?access_token=pk.eyJ1IjoiZXhsaW1pdDAwIiwiYSI6ImNqZndieTB4MTA2YzEzNG1zdXNvcDB0OW8ifQ.ByBDMvSiVoaSy2wV9gJ5FA"
-# url = "http://tiles.emapgo.cn/data/emg.china-streets/{z}/{x}/{y}.pbf"
-url = "http://mt0.google.cn/vt/lyrs=s&x={x}&y={y}&z={z}"
-
-# url= "http://datahive.minedata.cn/data/Buildingmore/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5874"
-# url= "http://datahive.minedata.cn/mergeddata/Adminflag,Annotation,Poi,Ptline,Railway,Road,Villtown,Worldannotation/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",//merge8
-# url= "http://datahive.minedata.cn/data/Waterface/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",
-# url= "http://datahive.minedata.cn/data/Greenface/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",
-# url= "http://datahive.minedata.cn/data/Landuse/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",            //>12
-# url= "http://datahive.minedata.cn/data/Ptstop/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",             //>13
-# url= "http://datahive.minedata.cn/data/ResidentialPolygon/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873", //>13
-# url= "http://datahive.minedata.cn/data/Buildingmore/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5874", //>14
-# url= "http://datahive.minedata.cn/data/Zlevel/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",             //>15
-# url= "http://datahive.minedata.cn/data/Subwaypolygon/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",      //>15
-# url= "http://datahive.minedata.cn/data/Ptexit/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",             //>16
-# url= "http://datahive.minedata.cn/data/Trafficlight/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",       //>16
-# url= "http://tiles.emapgo.cn/data/emg.china-streets/{z}/{x}/{y}.pbf",
-[[lrs]]
-min = 0
-max = 7
-geojson = "./geojson/global.geojson"
-
-[[lrs]]
-min = 8
-max = 11
-geojson = "./geojson/china.geojson"
-
-[[lrs]]
-min = 12
-max = 15
-geojson = "./geojson/suzhou.geojson"
-
-[[lrs]]
-min = 16
-max = 18
-geojson = "./geojson/changshu.geojson"
+	#name for mbtiles
+	name = "streets-v8"
+	#max and min level for mbtiles
+	min = 0
+	max = 10
+	#can be pbf/png/jpg
+	format = "jpg"
+	#can be xyz/tm
+	schema = "xyz"
+	#the vector tiles metadata tilejson
+	# json = ""
+	#url is the schema url of tiles
+	# url= "https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.vector.pbf?sku=1016gFniej06a&access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4M29iazA2Z2gycXA4N2pmbDZmangifQ.-g_vE53SD2WrJ6tFX7QHmA"
+	# url= "https://api.mapbox.com/v4/mapbox.mapbox-terrain-v2/{z}/{x}/{y}.vector.pbf?sku=1016gFniej06a&access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4M29iazA2Z2gycXA4N2pmbDZmangifQ.-g_vE53SD2WrJ6tFX7QHmA"
+	url = "http://mt0.google.cn/vt/lyrs=s&x={x}&y={y}&z={z}"
+#lrs can set diff boundaries for diff levels
+  [[lrs]]
+  	min = 0
+  	max = 5
+  	geojson = "./geojson/global.geojson"
+ [[lrs]]
+ 	min = 6
+ 	max = 8
+ 	geojson = "./geojson/china.geojson"
+  [[lrs]]
+ 	min = 9
+  	max = 10
+  	geojson = "./geojson/jiangsu.geojson"
+ [[lrs]]
+  	min = 11
+  	max = 11
+  	geojson = "./geojson/nanjing.geojson"
