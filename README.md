@@ -11,6 +11,6 @@ A well-polished tile downloader
 
 - 支持矢量瓦片数据下载
 
-- 支持文件存储和MBTILES两种存储方式
+- 支持文件和MBTILES两种存储方式
 
-- 参照示例url更改新的底图地址，即可启动下载任务
+参照配置文件中的示例url更改新的底图地址，即可启动下载任务~
