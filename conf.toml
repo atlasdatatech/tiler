@@ -8,7 +8,7 @@
 	directory ="output"
 [task]
 	#number of fetchers
-	workers = 16
+	workers = 100
 	#number of savers
 	savepipe = 1
 
@@ -17,7 +17,7 @@
 	name = "streets-v8"
 	#max and min level for mbtiles
 	min = 0
-	max = 10
+	max = 3
 	#can be pbf/png/jpg
 	format = "jpg"
 	#can be xyz/tm

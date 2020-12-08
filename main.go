@@ -38,7 +38,7 @@ func init() {
 	log.SetLevel(log.DebugLevel)
 }
 func usage() {
-	fmt.Fprintf(os.Stderr, `tiler version: tiler/0.9.19
+	fmt.Fprintf(os.Stderr, `tiler version: tiler/v0.1.0
 Usage: tiler [-h] [-c filename]
 `)
 	flag.PrintDefaults()
@@ -70,6 +70,7 @@ func main() {
 		flag.Usage()
 		return
 	}
+
 	if cf == "" {
 		cf = "conf.toml"
 	}
@@ -83,10 +84,6 @@ func main() {
 		Schema: viper.GetString("tm.schema"),
 		JSON:   viper.GetString("tm.json"),
 		URL:    viper.GetString("tm.url"),
-		// URL: "http://mt0.google.cn/vt/lyrs=s&hl=zh-CN&x={x}&y={y}&z={z}", ///data/landcover/{z}/{x}/{y}.pbf?key=hWWfWrAiWGtv68r8wA6D
-		// URL: "http://tiles.emapgo.cn/data/emg.china-streets/{z}/{x}/{y}.pbf",
-		// URL: "http://datahive.minedata.cn/data/Buildingmore/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873", //>14
-		// URL: "http://datahive.minedata.cn/mergeddata/Adminflag,Annotation,Poi,Ptline,Railway,Road,Villtown,Worldannotation/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",
 	}
 	type cfgLayer struct {
 		Min     int
@@ -115,67 +112,4 @@ func main() {
 	task.Download()
 	secs := time.Since(start).Seconds()
 	fmt.Printf("\n%.3fs finished...", secs)
-
-	// for z := 0; z <= 6; z++ {
-	// 	c := loadCollection("./geojson/z1-6.global.geojson")
-	// 	layer := Layer{
-	// 		// URL: "http://datahive.minedata.cn/mergeddata/Adminflag,Annotation,Poi,Ptline,Railway,Road,Villtown,Worldannotation/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",
-	// 		URL: "http://datahive.minedata.cn/data/ResidentialPolygon/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",
-	// 		// URL:        "http://tiles.emapgo.cn/data/emg.china-streets/{z}/{x}/{y}.pbf",
-	// 		Zoom:       z,
-	// 		Collection: c,
-	// 	}
-	// 	layers = append(layers, layer)
-	// }
-
-	// for z := 14; z <= 17; z++ {
-	// 	c := loadCollection("./geojson/beijing.geojson")
-	// 	layer := Layer{
-	// 		// URL: "http://datahive.minedata.cn/mergeddata/Adminflag,Annotation,Poi,Ptline,Railway,Road,Villtown,Worldannotation/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",//merge8
-	// 		// URL: "http://datahive.minedata.cn/data/Waterface/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",
-	// 		// URL: "http://datahive.minedata.cn/data/Greenface/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",
-	// 		// URL: "http://datahive.minedata.cn/data/Landuse/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",            //>12
-	// 		// URL: "http://datahive.minedata.cn/data/Ptstop/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",             //>13
-	// 		// URL: "http://datahive.minedata.cn/data/ResidentialPolygon/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873", //>13
-	// 		// URL: "http://datahive.minedata.cn/data/Buildingmore/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5874", //>14
-	// 		// URL: "http://datahive.minedata.cn/data/Zlevel/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",             //>15
-	// 		// URL: "http://datahive.minedata.cn/data/Subwaypolygon/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",      //>15
-	// 		// URL: "http://datahive.minedata.cn/data/Ptexit/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",             //>16
-	// 		// URL: "http://datahive.minedata.cn/data/Trafficlight/{z}/{x}/{y}?token=f7bf94956c3d4693bab79b5a63498f61&solu=5873",       //>16
-	// 		// URL:        "http://tiles.emapgo.cn/data/emg.china-streets/{z}/{x}/{y}.pbf",
-	// 		Zoom:       z,
-	// 		Collection: c,
-	// 	}
-	// 	layers = append(layers, layer)
-	// }
-
-	// for z := 11; z <= 13; z++ {
-	// 	c := loadCollection("./geojson/z11-13.gansu.geojson")
-	// 	layer := Layer{
-	// 		URL:        "http://mt0.google.cn/vt/lyrs=s&x={x}&y={y}&z={z}",
-	// 		Zoom:       z,
-	// 		Collection: c,
-	// 	}
-	// 	layers = append(layers, layer)
-	// }
-
-	// for z := 14; z <= 16; z++ {
-	// 	c := loadCollection("./geojson/z14-16.lanzhou.geojson")
-	// 	layer := Layer{
-	// 		URL:        "http://mt0.google.cn/vt/lyrs=s&x={x}&y={y}&z={z}",
-	// 		Zoom:       z,
-	// 		Collection: c,
-	// 	}
-	// 	layers = append(layers, layer)
-	// }
-	// for z := 17; z <= 18; z++ {
-	// 	c := loadCollection("./geojson/z17-18.lanzhou.geojson")
-	// 	layer := Layer{
-	// 		URL:        "http://mt0.google.cn/vt/lyrs=s&x={x}&y={y}&z={z}",
-	// 		Zoom:       z,
-	// 		Collection: c,
-	// 	}
-	// 	layers = append(layers, layer)
-	// }
-
 }

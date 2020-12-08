@@ -74,10 +74,8 @@ func NewTask(layers []Layer, m TileMap) *Task {
 		if layers[i].URL == "" {
 			layers[i].URL = m.URL
 		}
-		t := time.Now()
 		layers[i].Count = tilecover.CollectionCount(layers[i].Collection, maptile.Zoom(layers[i].Zoom))
-		fmt.Println(time.Since(t))
-		fmt.Println(layers[i].Zoom, layers[i].Count)
+		log.Printf("zoom: %d, tiles: %d \n", layers[i].Zoom, layers[i].Count)
 		task.Total += layers[i].Count
 	}
 	task.abort = make(chan struct{})
@@ -296,7 +294,7 @@ func (task *Task) tileFetcher(t maptile.Tile, url string) {
 
 //DownloadZoom 下载指定层级
 func (task *Task) downloadLayer(layer Layer) {
-	bar := pb.New64(layer.Count).Prefix(fmt.Sprintf("Zoom %d : ", layer.Zoom)).Postfix("\n")
+	bar := pb.New64(layer.Count).Prefix(fmt.Sprintf("Zoom %d : ", layer.Zoom))
 	// bar.SetRefreshRate(time.Second)
 	bar.Start()
 	// bar.SetMaxWidth(300)
@@ -314,21 +312,21 @@ func (task *Task) downloadLayer(layer Layer) {
 			task.wg.Add(1)
 			go task.tileFetcher(tile, layer.URL)
 		case <-task.abort:
-			log.Infof("task %s got canceled.", task.ID)
+			log.Infof("Task %s got canceled.", task.ID)
 			close(tilelist)
 		case <-task.pause:
-			log.Infof("task %s suspended.", task.ID)
+			log.Infof("Task %s suspended.", task.ID)
 			select {
 			case <-task.play:
-				log.Infof("task %s go on.", task.ID)
+				log.Infof("Task %s go on.", task.ID)
 			case <-task.abort:
-				log.Infof("task %s got canceled.", task.ID)
+				log.Infof("Task %s got canceled.", task.ID)
 				close(tilelist)
 			}
 		}
 	}
 	task.wg.Wait()
-	bar.FinishPrint(fmt.Sprintf("Task %s zoom %d finished ~", task.ID, layer.Zoom))
+	bar.FinishPrint(fmt.Sprintf("Task %s Zoom %d finished ~", task.ID, layer.Zoom))
 }
 
 //DownloadZoom 下载指定层级
@@ -353,10 +351,10 @@ func (task *Task) downloadGeom(geom orb.Geometry, zoom int) {
 			task.wg.Add(1)
 			go task.tileFetcher(tile, task.TileMap.URL)
 		case <-task.abort:
-			log.Infof("task %s got canceled.", task.ID)
+			log.Infof("Task %s got canceled.", task.ID)
 			close(tilelist)
 		case <-task.pause:
-			log.Infof("task %s suspended.", task.ID)
+			log.Infof("Task %s suspended.", task.ID)
 			select {
 			case <-task.play:
 				log.Infof("task %s go on.", task.ID)
@@ -367,7 +365,7 @@ func (task *Task) downloadGeom(geom orb.Geometry, zoom int) {
 		}
 	}
 	task.wg.Wait()
-	bar.FinishPrint(fmt.Sprintf("task %s zoom %d finished ~", task.ID, zoom))
+	bar.FinishPrint(fmt.Sprintf("Task %s Zoom %d finished ~", task.ID, zoom))
 }
 
 //Download 开启下载任务
@@ -386,7 +384,7 @@ func (task *Task) Download() {
 		task.downloadLayer(layer)
 	}
 	task.wg.Wait()
-	task.Bar.FinishPrint(fmt.Sprintf("task %s finished ~", task.ID))
+	task.Bar.FinishPrint(fmt.Sprintf("Task %s finished ~", task.ID))
 }
 
 //DownloadDepth 深度优先下载
@@ -454,5 +452,5 @@ func (task *Task) DownloadDepth() {
 		task.wg.Wait() //wait for saving
 		bar.FinishPrint(fmt.Sprintf("zoom %d finished ~", layer.Zoom))
 	}
-	task.Bar.FinishPrint(fmt.Sprintf("task %s finished ~", task.ID))
+	task.Bar.FinishPrint(fmt.Sprintf("Task %s finished ~", task.ID))
 }
