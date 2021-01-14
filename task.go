@@ -289,12 +289,12 @@ func (task *Task) tileFetcher(t maptile.Tile, url string) {
 		task.saveTile(tile)
 	}
 	secs := time.Since(start).Seconds()
-	fmt.Printf("\ntile %v, %.3fs, %.2f kb, %s ...\n", t, secs, float32(len(body))/1024.0, pbf)
+	fmt.Printf("tile(z:%d, x:%d, y:%d), %.3fs, %.2f kb, %s ...\n", t.Z, t.X, t.Y, secs, float32(len(body))/1024.0, pbf)
 }
 
 //DownloadZoom 下载指定层级
 func (task *Task) downloadLayer(layer Layer) {
-	bar := pb.New64(layer.Count).Prefix(fmt.Sprintf("Zoom %d : ", layer.Zoom))
+	bar := pb.New64(layer.Count).Prefix(fmt.Sprintf("Zoom %d : ", layer.Zoom)).Postfix("\n")
 	// bar.SetRefreshRate(time.Second)
 	bar.Start()
 	// bar.SetMaxWidth(300)
@@ -371,8 +371,7 @@ func (task *Task) downloadGeom(geom orb.Geometry, zoom int) {
 //Download 开启下载任务
 func (task *Task) Download() {
 	//g orb.Geometry, minz int, maxz int
-	task.Bar = pb.New64(task.Total).Prefix("Task : ")
-	//.Postfix("\n")
+	task.Bar = pb.New64(task.Total).Prefix("Task : ").Postfix("\n")
 	// task.Bar.SetRefreshRate(10 * time.Second)
 	// task.Bar.Format("<.- >")
 	task.Bar.Start()

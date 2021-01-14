@@ -8,13 +8,13 @@
 	directory ="output"
 [task]
 	#number of fetchers
-	workers = 100
+	workers = 64
 	#number of savers
-	savepipe = 1
+	savepipe = 4
 
 [tm]
 	#name for mbtiles
-	name = "streets-v8"
+	name = "google satelite"
 	#max and min level for mbtiles
 	min = 0
 	max = 3
@@ -27,7 +27,7 @@
 	#url is the schema url of tiles
 	# url= "https://api.mapbox.com/v4/mapbox.mapbox-streets-v8/{z}/{x}/{y}.vector.pbf?sku=1016gFniej06a&access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4M29iazA2Z2gycXA4N2pmbDZmangifQ.-g_vE53SD2WrJ6tFX7QHmA"
 	# url= "https://api.mapbox.com/v4/mapbox.mapbox-terrain-v2/{z}/{x}/{y}.vector.pbf?sku=1016gFniej06a&access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4M29iazA2Z2gycXA4N2pmbDZmangifQ.-g_vE53SD2WrJ6tFX7QHmA"
-	url = "http://mt0.google.cn/vt/lyrs=s&x={x}&y={y}&z={z}"
+	url = "http://mt0.google.com/vt/lyrs=s&x={x}&y={y}&z={z}"
 #lrs can set diff boundaries for diff levels
   [[lrs]]
   	min = 0
