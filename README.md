@@ -23,4 +23,5 @@ A well-polished tile downloader
 
 2. 直接release发布页面, 下载对应平台的预编译程序
 
-参照配置文件中的示例url更改新的底图地址，即可启动下载任务~
+参照配置文件中的示例url更改为想要下载的地图地址，即可启动下载任务~
+> 例如: url = "http://mt0.google.com/vt/lyrs=s&x={x}&y={y}&z={z}" ,地址中瓦片的xyz使用{x}{y}{z}代替，其他保持不变。
