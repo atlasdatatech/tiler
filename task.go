@@ -46,7 +46,8 @@ type Task struct {
 	workerCount        int
 	savePipeSize       int
 	bufSize            int
-	wg                 sync.WaitGroup
+	layerWG            sync.WaitGroup
+	tileWG             sync.WaitGroup
 	abort, pause, play chan struct{}
 	workers            chan maptile.Tile
 	savingpipe         chan Tile
@@ -222,7 +223,7 @@ func (task *Task) savePipe() {
 
 //SaveTile 保存瓦片
 func (task *Task) saveTile(tile Tile) error {
-	defer task.wg.Done()
+	// defer task.wg.Done()
 	err := saveToFiles(tile, filepath.Base(task.File))
 	if err != nil {
 		log.Errorf("create %v tile file error ~ %s", tile.T, err)
@@ -232,9 +233,9 @@ func (task *Task) saveTile(tile Tile) error {
 
 //tileFetcher 瓦片加载器
 func (task *Task) tileFetcher(t maptile.Tile, url string) {
-	defer task.wg.Done()
+	defer task.tileWG.Done() //结束该瓦片请求
 	defer func() {
-		<-task.workers
+		<-task.workers //workers完成并清退
 	}()
 	start := time.Now()
 	prep := func(t maptile.Tile, url string) string {
@@ -285,7 +286,7 @@ func (task *Task) tileFetcher(t maptile.Tile, url string) {
 	if task.outformat == "mbtiles" {
 		task.savingpipe <- tile
 	} else {
-		task.wg.Add(1)
+		// task.wg.Add(1)
 		task.saveTile(tile)
 	}
 	secs := time.Since(start).Seconds()
@@ -309,7 +310,7 @@ func (task *Task) downloadLayer(layer Layer) {
 		case task.workers <- tile:
 			bar.Increment()
 			task.Bar.Increment()
-			task.wg.Add(1)
+			task.tileWG.Add(1)
 			go task.tileFetcher(tile, layer.URL)
 		case <-task.abort:
 			log.Infof("Task %s got canceled.", task.ID)
@@ -325,7 +326,8 @@ func (task *Task) downloadLayer(layer Layer) {
 			}
 		}
 	}
-	task.wg.Wait()
+	//等待该层结束
+	task.tileWG.Wait()
 	bar.FinishPrint(fmt.Sprintf("Task %s Zoom %d finished ~", task.ID, layer.Zoom))
 }
 
@@ -348,7 +350,7 @@ func (task *Task) downloadGeom(geom orb.Geometry, zoom int) {
 		case task.workers <- tile:
 			bar.Increment()
 			task.Bar.Increment()
-			task.wg.Add(1)
+			task.tileWG.Add(1)
 			go task.tileFetcher(tile, task.TileMap.URL)
 		case <-task.abort:
 			log.Infof("Task %s got canceled.", task.ID)
@@ -364,7 +366,7 @@ func (task *Task) downloadGeom(geom orb.Geometry, zoom int) {
 			}
 		}
 	}
-	task.wg.Wait()
+	task.tileWG.Wait()
 	bar.FinishPrint(fmt.Sprintf("Task %s Zoom %d finished ~", task.ID, zoom))
 }
 
@@ -382,7 +384,6 @@ func (task *Task) Download() {
 	for _, layer := range task.Layers {
 		task.downloadLayer(layer)
 	}
-	task.wg.Wait()
 	task.Bar.FinishPrint(fmt.Sprintf("Task %s finished ~", task.ID))
 }
 
@@ -405,9 +406,10 @@ func (task *Task) DownloadDepth() {
 		fmt.Printf("merging up append set, %d tiles ~\n", ifile)
 		fmt.Println("downloading started, Zoom:", layer.Zoom, "Tiles:", ifile)
 		bar := pb.StartNew(ifile).Prefix(fmt.Sprintf("Zoom %d : ", layer.Zoom)).Postfix("\n")
-		task.wg.Add(1)
+		var wg sync.WaitGroup
+		wg.Add(1)
 		go func(name string, mfc *geojson.FeatureCollection) {
-			defer task.wg.Done()
+			defer wg.Done()
 			data, err := json.MarshalIndent(mfc, "", " ")
 			if err != nil {
 				log.Printf("error marshalling json: %v", err)
@@ -448,7 +450,7 @@ func (task *Task) DownloadDepth() {
 		for geom := range cliperBuffer {
 			task.downloadGeom(geom, layer.Zoom)
 		}
-		task.wg.Wait() //wait for saving
+		wg.Wait() //wait for saving
 		bar.FinishPrint(fmt.Sprintf("zoom %d finished ~", layer.Zoom))
 	}
 	task.Bar.FinishPrint(fmt.Sprintf("Task %s finished ~", task.ID))
