@@ -25,10 +25,11 @@ func saveToMBTile(tile Tile, db *sql.DB) error {
 	return nil
 }
 
-func saveToFiles(tile Tile, rootdir string) error {
+func saveToFiles(tile Tile, task *Task) error {
+	rootdir := filepath.Base(task.File)
 	dir := filepath.Join(rootdir, fmt.Sprintf(`%d`, tile.T.Z), fmt.Sprintf(`%d`, tile.T.X))
 	os.MkdirAll(dir, os.ModePerm)
-	fileName := filepath.Join(dir, fmt.Sprintf(`%d.png`, tile.T.Y))
+	fileName := filepath.Join(dir, fmt.Sprintf(`%d.%s`, tile.T.Y, task.TileMap.Format))
 	err := ioutil.WriteFile(fileName, tile.C, os.ModePerm)
 	if err != nil {
 		return err

@@ -224,7 +224,7 @@ func (task *Task) savePipe() {
 //SaveTile 保存瓦片
 func (task *Task) saveTile(tile Tile) error {
 	// defer task.wg.Done()
-	err := saveToFiles(tile, filepath.Base(task.File))
+	err := saveToFiles(tile, task)
 	if err != nil {
 		log.Errorf("create %v tile file error ~ %s", tile.T, err)
 	}
