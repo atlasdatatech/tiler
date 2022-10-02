@@ -230,40 +230,42 @@ func (task *Task) saveTile(tile Tile) error {
 }
 
 //tileFetcher 瓦片加载器
-func (task *Task) tileFetcher(t maptile.Tile, url string) {
+func (task *Task) tileFetcher(mt maptile.Tile, url string) {
+	start := time.Now()
 	defer task.tileWG.Done() //结束该瓦片请求
 	defer func() {
 		<-task.workers //workers完成并清退
 	}()
-	start := time.Now()
+
 	prep := func(t maptile.Tile, url string) string {
 		url = strings.Replace(url, "{x}", strconv.Itoa(int(t.X)), -1)
 		url = strings.Replace(url, "{y}", strconv.Itoa(int(t.Y)), -1)
 		url = strings.Replace(url, "{z}", strconv.Itoa(int(t.Z)), -1)
 		return url
 	}
-	pbf := prep(t, url)
-	resp, err := http.Get(pbf)
+	tile := prep(mt, url)
+	resp, err := http.Get(tile)
 	if err != nil {
-		log.Errorf("fetch :%s error, details: %s ~", pbf, err)
+		log.Errorf("fetch :%s error, details: %s ~", tile, err)
 		return
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		log.Errorf("fetch %v tile error, status code: %d ~", pbf, resp.StatusCode)
+		log.Errorf("fetch %v tile error, status code: %d ~", tile, resp.StatusCode)
 		return
 	}
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Errorf("read %v tile error ~ %s", t, err)
+		log.Errorf("read %v tile error ~ %s", mt, err)
 		return
 	}
 	if len(body) == 0 {
-		log.Warnf("nil tile %v ~", t)
+		log.Warnf("nil tile %v ~", mt)
 		return //zero byte tiles n
 	}
-	tile := Tile{
-		T: t,
+	// tiledata
+	td := Tile{
+		T: mt,
 		C: body,
 	}
 
@@ -277,22 +279,19 @@ func (task *Task) tileFetcher(t maptile.Tile, url string) {
 		if err := zw.Close(); err != nil {
 			log.Fatal(err)
 		}
-		tile.C = buf.Bytes()
+		td.C = buf.Bytes()
 	}
 
 	//enable savingpipe
 	if task.outformat == "mbtiles" {
-		task.savingpipe <- tile
+		task.savingpipe <- td
 	} else {
 		// task.wg.Add(1)
-		task.saveTile(tile)
+		task.saveTile(td)
 	}
+
 	cost := time.Since(start).Milliseconds()
-	if cost < int64(task.timeDelay) {
-		time.Sleep(time.Duration(int64(task.timeDelay)-cost) * time.Millisecond)
-	}
-	cost = time.Since(start).Milliseconds()
-	fmt.Printf("tile(z:%d, x:%d, y:%d), %dms , %.2f kb, %s ...\n", t.Z, t.X, t.Y, cost, float32(len(body))/1024.0, pbf)
+	fmt.Printf("tile(z:%d, x:%d, y:%d), %dms , %.2f kb, %s ...\n", mt.Z, mt.X, mt.Y, cost, float32(len(body))/1024.0, tile)
 }
 
 //DownloadZoom 下载指定层级
@@ -310,6 +309,8 @@ func (task *Task) downloadLayer(layer Layer) {
 		// log.Infof(`fetching tile %v ~`, tile)
 		select {
 		case task.workers <- tile:
+			//设置请求发送间隔时间
+			time.Sleep(time.Duration(task.timeDelay) * time.Millisecond)
 			bar.Increment()
 			task.Bar.Increment()
 			task.tileWG.Add(1)
