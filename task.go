@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"compress/gzip"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -16,8 +15,6 @@ import (
 	"time"
 
 	"github.com/paulmach/orb"
-	"github.com/paulmach/orb/clip"
-	"github.com/paulmach/orb/geojson"
 	"github.com/paulmach/orb/maptile"
 	"github.com/paulmach/orb/maptile/tilecover"
 	log "github.com/sirupsen/logrus"
@@ -45,8 +42,8 @@ type Task struct {
 	db                 *sql.DB
 	workerCount        int
 	savePipeSize       int
+	timeDelay          int
 	bufSize            int
-	layerWG            sync.WaitGroup
 	tileWG             sync.WaitGroup
 	abort, pause, play chan struct{}
 	workers            chan maptile.Tile
@@ -85,6 +82,7 @@ func NewTask(layers []Layer, m TileMap) *Task {
 
 	task.workerCount = viper.GetInt("task.workers")
 	task.savePipeSize = viper.GetInt("task.savepipe")
+	task.timeDelay = viper.GetInt("task.timedelay")
 	task.workers = make(chan maptile.Tile, task.workerCount)
 	task.savingpipe = make(chan Tile, task.savePipeSize)
 	task.bufSize = viper.GetInt("task.mergebuf")
@@ -268,8 +266,8 @@ func (task *Task) tileFetcher(t maptile.Tile, url string) {
 		T: t,
 		C: body,
 	}
-	if task.TileMap.Format == PBF {
 
+	if task.TileMap.Format == PBF {
 		var buf bytes.Buffer
 		zw := gzip.NewWriter(&buf)
 		_, err = zw.Write(body)
@@ -289,8 +287,12 @@ func (task *Task) tileFetcher(t maptile.Tile, url string) {
 		// task.wg.Add(1)
 		task.saveTile(tile)
 	}
-	secs := time.Since(start).Seconds()
-	fmt.Printf("tile(z:%d, x:%d, y:%d), %.3fs, %.2f kb, %s ...\n", t.Z, t.X, t.Y, secs, float32(len(body))/1024.0, pbf)
+	cost := time.Since(start).Milliseconds()
+	if cost < int64(task.timeDelay) {
+		time.Sleep(time.Duration(int64(task.timeDelay)-cost) * time.Millisecond)
+	}
+	cost = time.Since(start).Milliseconds()
+	fmt.Printf("tile(z:%d, x:%d, y:%d), %dms , %.2f kb, %s ...\n", t.Z, t.X, t.Y, cost, float32(len(body))/1024.0, pbf)
 }
 
 //DownloadZoom 下载指定层级
@@ -331,45 +333,6 @@ func (task *Task) downloadLayer(layer Layer) {
 	bar.FinishPrint(fmt.Sprintf("Task %s Zoom %d finished ~", task.ID, layer.Zoom))
 }
 
-//DownloadZoom 下载指定层级
-func (task *Task) downloadGeom(geom orb.Geometry, zoom int) {
-	count := tilecover.GeometryCount(geom, maptile.Zoom(zoom))
-	bar := pb.New64(count).Prefix(fmt.Sprintf("Zoom %d : ", zoom))
-	bar.Start()
-
-	var tilelist = make(chan maptile.Tile, task.bufSize)
-
-	go func(g orb.Geometry, z maptile.Zoom, ch chan<- maptile.Tile) {
-		defer close(ch)
-		tilecover.GeometryChannel(g, z, ch)
-	}(geom, maptile.Zoom(zoom), tilelist)
-
-	for tile := range tilelist {
-		// log.Infof(`fetching tile %v ~`, tile)
-		select {
-		case task.workers <- tile:
-			bar.Increment()
-			task.Bar.Increment()
-			task.tileWG.Add(1)
-			go task.tileFetcher(tile, task.TileMap.URL)
-		case <-task.abort:
-			log.Infof("Task %s got canceled.", task.ID)
-			close(tilelist)
-		case <-task.pause:
-			log.Infof("Task %s suspended.", task.ID)
-			select {
-			case <-task.play:
-				log.Infof("task %s go on.", task.ID)
-			case <-task.abort:
-				log.Infof("task %s got canceled.", task.ID)
-				close(tilelist)
-			}
-		}
-	}
-	task.tileWG.Wait()
-	bar.FinishPrint(fmt.Sprintf("Task %s Zoom %d finished ~", task.ID, zoom))
-}
-
 //Download 开启下载任务
 func (task *Task) Download() {
 	//g orb.Geometry, minz int, maxz int
@@ -383,75 +346,6 @@ func (task *Task) Download() {
 	go task.savePipe()
 	for _, layer := range task.Layers {
 		task.downloadLayer(layer)
-	}
-	task.Bar.FinishPrint(fmt.Sprintf("Task %s finished ~", task.ID))
-}
-
-//DownloadDepth 深度优先下载
-func (task *Task) DownloadDepth() {
-	task.Bar = pb.New64(task.Total).Prefix("Fetching -> ").Postfix("\n")
-	task.Bar.Start()
-	// for _, layer := range task.Layers {
-	// 	task.downloadLayer(layer)
-	// 	break
-	// }
-	for i, layer := range task.Layers {
-		if i < 1 {
-			continue
-		}
-		task.tileSet.Lock()
-		zoomSet := task.tileSet.M
-		mfc := task.tileSet.M.ToFeatureCollection()
-		ifile := len(task.tileSet.M)
-		fmt.Printf("merging up append set, %d tiles ~\n", ifile)
-		fmt.Println("downloading started, Zoom:", layer.Zoom, "Tiles:", ifile)
-		bar := pb.StartNew(ifile).Prefix(fmt.Sprintf("Zoom %d : ", layer.Zoom)).Postfix("\n")
-		var wg sync.WaitGroup
-		wg.Add(1)
-		go func(name string, mfc *geojson.FeatureCollection) {
-			defer wg.Done()
-			data, err := json.MarshalIndent(mfc, "", " ")
-			if err != nil {
-				log.Printf("error marshalling json: %v", err)
-				return
-			}
-
-			err = ioutil.WriteFile(name+".geojson", data, 0644)
-			if err != nil {
-				log.Printf("write file failure: %v", err)
-			}
-			log.Printf("output finished : %s.geojson", name)
-
-		}(strconv.FormatInt(int64(ifile), 10), mfc)
-
-		task.tileSet.M = make(maptile.Set)
-		task.tileSet.Unlock()
-		cliperBuffer := make(chan orb.Geometry, 16)
-		go func(set maptile.Set, buffer chan<- orb.Geometry, bar *pb.ProgressBar) {
-			defer close(buffer)
-			for t := range set {
-				bar.Increment()
-				// buffer <- t.Bound()
-				log.Println("starting cliper...")
-				start := time.Now()
-				for _, g := range layer.Collection {
-					clipped := clip.Geometry(t.Bound(), g)
-					secs := time.Since(start).Seconds()
-					if clipped != nil {
-						buffer <- clipped
-						log.Printf("cliper add to buffer,time:%.4fs...", secs)
-					}
-				}
-			}
-			log.Printf("cliper buffer closing...")
-			close(buffer)
-		}(zoomSet, cliperBuffer, bar)
-
-		for geom := range cliperBuffer {
-			task.downloadGeom(geom, layer.Zoom)
-		}
-		wg.Wait() //wait for saving
-		bar.FinishPrint(fmt.Sprintf("zoom %d finished ~", layer.Zoom))
 	}
 	task.Bar.FinishPrint(fmt.Sprintf("Task %s finished ~", task.ID))
 }
