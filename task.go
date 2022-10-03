@@ -291,7 +291,7 @@ func (task *Task) tileFetcher(mt maptile.Tile, url string) {
 	}
 
 	cost := time.Since(start).Milliseconds()
-	fmt.Printf("tile(z:%d, x:%d, y:%d), %dms , %.2f kb, %s ...\n", mt.Z, mt.X, mt.Y, cost, float32(len(body))/1024.0, tile)
+	log.Infof("tile(z:%d, x:%d, y:%d), %dms , %.2f kb, %s ...\n", mt.Z, mt.X, mt.Y, cost, float32(len(body))/1024.0, tile)
 }
 
 //DownloadZoom 下载指定层级

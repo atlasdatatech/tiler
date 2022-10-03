@@ -112,5 +112,5 @@ func main() {
 	task := NewTask(layers, tm)
 	task.Download()
 	secs := time.Since(start).Seconds()
-	fmt.Printf("\n%.3fs finished...", secs)
+	log.Printf("\n%.3fs finished...", secs)
 }
