@@ -11,11 +11,9 @@ import (
 
 	nested "github.com/antonfisher/nested-logrus-formatter"
 	"github.com/spf13/viper"
-
-	_ "github.com/shaxbee/go-spatialite"
 )
 
-//flag
+// flag
 var (
 	hf bool
 	cf string
@@ -44,7 +42,7 @@ Usage: tiler [-h] [-c filename]
 	flag.PrintDefaults()
 }
 
-//initConf 初始化配置
+// initConf 初始化配置
 func initConf(cfgFile string) {
 	if _, err := os.Stat(cfgFile); os.IsNotExist(err) {
 		log.Warnf("config file(%s) not exist", cfgFile)
