@@ -10,6 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	nested "github.com/antonfisher/nested-logrus-formatter"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/spf13/viper"
 )
 

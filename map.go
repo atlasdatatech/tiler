@@ -8,7 +8,7 @@ import (
 	"github.com/paulmach/orb/maptile"
 )
 
-//TileMap 瓦片地图类型
+// TileMap 瓦片地图类型
 type TileMap struct {
 	ID          int
 	Name        string
@@ -23,14 +23,14 @@ type TileMap struct {
 	//such as porxy...
 }
 
-//CreateTileMap 添加地图
+// CreateTileMap 添加地图
 func CreateTileMap(url string) {
 	// tileMap := TileMap{}
 	//tileMap.Save()
 	//成功默认保存到数据库
 }
 
-//GetTileMapList 获取初始化默认地图列表
+// GetTileMapList 获取初始化默认地图列表
 func GetTileMapList() map[int]TileMap {
 	tml := make(map[int]TileMap)
 	var list = []string{"http://mt0.google.com/vt/lyrs=y&x={x}&y={y}&z={z}",
@@ -49,7 +49,7 @@ func GetTileMapList() map[int]TileMap {
 	return tml
 }
 
-//TileURL 获取瓦片URL
+// TileURL 获取瓦片URL
 func (m TileMap) getTileURL(t maptile.Tile) string {
 	url := strings.Replace(m.URL, "{x}", strconv.Itoa(int(t.X)), -1)
 	url = strings.Replace(url, "{y}", strconv.Itoa(int(t.Y)), -1)

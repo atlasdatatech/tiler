@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sync"
@@ -30,7 +29,7 @@ func saveToFiles(tile Tile, task *Task) error {
 	dir := filepath.Join(rootdir, fmt.Sprintf(`%d`, tile.T.Z), fmt.Sprintf(`%d`, tile.T.X))
 	os.MkdirAll(dir, os.ModePerm)
 	fileName := filepath.Join(dir, fmt.Sprintf(`%d.%s`, tile.T.Y, task.TileMap.Format))
-	err := ioutil.WriteFile(fileName, tile.C, os.ModePerm)
+	err := os.WriteFile(fileName, tile.C, os.ModePerm)
 	if err != nil {
 		return err
 	}
@@ -69,7 +68,7 @@ func optimizeDatabase(db *sql.DB) error {
 }
 
 func loadFeature(path string) *geojson.Feature {
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		log.Fatalf("unable to read file: %v", err)
 	}
@@ -96,7 +95,7 @@ func loadFeature(path string) *geojson.Feature {
 }
 
 func loadFeatureCollection(path string) *geojson.FeatureCollection {
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		log.Fatalf("unable to read file: %v", err)
 	}
@@ -119,7 +118,7 @@ func loadFeatureCollection(path string) *geojson.FeatureCollection {
 }
 
 func loadCollection(path string) orb.Collection {
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		log.Fatalf("unable to read file: %v", err)
 	}
@@ -155,7 +154,7 @@ func output(name string, r *geojson.FeatureCollection) {
 		log.Fatalf("error marshalling json: %v", err)
 	}
 
-	err = ioutil.WriteFile("failure_"+name+".geojson", data, 0644)
+	err = os.WriteFile("failure_"+name+".geojson", data, 0644)
 	if err != nil {
 		log.Fatalf("write file failure: %v", err)
 	}
@@ -169,7 +168,7 @@ func output2(name string, r *geojson.FeatureCollection, wg *sync.WaitGroup) {
 		log.Fatalf("error marshalling json: %v", err)
 	}
 
-	err = ioutil.WriteFile(name+".geojson", data, 0644)
+	err = os.WriteFile(name+".geojson", data, 0644)
 	if err != nil {
 		log.Fatalf("write file failure: %v", err)
 	}

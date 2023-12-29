@@ -5,7 +5,8 @@ import (
 	"compress/gzip"
 	"database/sql"
 	"fmt"
-	"io/ioutil"
+	"io"
+	"math"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -23,10 +24,10 @@ import (
 	pb "gopkg.in/cheggaaa/pb.v1"
 )
 
-//MBTileVersion mbtiles版本号
+// MBTileVersion mbtiles版本号
 const MBTileVersion = "1.2"
 
-//Task 下载任务
+// Task 下载任务
 type Task struct {
 	ID                 string
 	Name               string
@@ -52,7 +53,7 @@ type Task struct {
 	outformat          string
 }
 
-//NewTask 创建下载任务
+// NewTask 创建下载任务
 func NewTask(layers []Layer, m TileMap) *Task {
 	if len(layers) == 0 {
 		return nil
@@ -92,7 +93,7 @@ func NewTask(layers []Layer, m TileMap) *Task {
 	return &task
 }
 
-//Bound 范围
+// Bound 范围
 func (task *Task) Bound() orb.Bound {
 	bound := orb.Bound{Min: orb.Point{1, 1}, Max: orb.Point{-1, -1}}
 	for _, layer := range task.Layers {
@@ -103,7 +104,7 @@ func (task *Task) Bound() orb.Bound {
 	return bound
 }
 
-//Center 中心点
+// Center 中心点
 func (task *Task) Center() orb.Point {
 	layer := task.Layers[len(task.Layers)-1]
 	bound := orb.Bound{Min: orb.Point{1, 1}, Max: orb.Point{-1, -1}}
@@ -113,7 +114,7 @@ func (task *Task) Center() orb.Point {
 	return bound.Center()
 }
 
-//MetaItems 输出
+// MetaItems 输出
 func (task *Task) MetaItems() map[string]string {
 	b := task.Bound()
 	c := task.Center()
@@ -136,7 +137,7 @@ func (task *Task) MetaItems() map[string]string {
 	return data
 }
 
-//SetupMBTileTables 初始化配置MBTile库
+// SetupMBTileTables 初始化配置MBTile库
 func (task *Task) SetupMBTileTables() error {
 
 	if task.File == "" {
@@ -205,7 +206,7 @@ func (task *Task) playFun() {
 	task.play <- struct{}{}
 }
 
-//SavePipe 保存瓦片管道
+// SavePipe 保存瓦片管道
 func (task *Task) savePipe() {
 	for tile := range task.savingpipe {
 		err := saveToMBTile(tile, task.db)
@@ -219,7 +220,7 @@ func (task *Task) savePipe() {
 	}
 }
 
-//SaveTile 保存瓦片
+// SaveTile 保存瓦片
 func (task *Task) saveTile(tile Tile) error {
 	// defer task.wg.Done()
 	err := saveToFiles(tile, task)
@@ -229,7 +230,7 @@ func (task *Task) saveTile(tile Tile) error {
 	return nil
 }
 
-//tileFetcher 瓦片加载器
+// tileFetcher 瓦片加载器
 func (task *Task) tileFetcher(mt maptile.Tile, url string) {
 	start := time.Now()
 	defer task.tileWG.Done() //结束该瓦片请求
@@ -240,21 +241,44 @@ func (task *Task) tileFetcher(mt maptile.Tile, url string) {
 	prep := func(t maptile.Tile, url string) string {
 		url = strings.Replace(url, "{x}", strconv.Itoa(int(t.X)), -1)
 		url = strings.Replace(url, "{y}", strconv.Itoa(int(t.Y)), -1)
+		maxY := int(math.Pow(2, float64(t.Z))) - 1
+		url = strings.Replace(url, "{-y}", strconv.Itoa(maxY-int(t.Y)), -1)
 		url = strings.Replace(url, "{z}", strconv.Itoa(int(t.Z)), -1)
 		return url
 	}
 	tile := prep(mt, url)
-	resp, err := http.Get(tile)
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			// 自定义重定向的行为
+			return http.ErrUseLastResponse // 使用最后一个响应
+		},
+	}
+	req, err := http.NewRequest("GET", tile, nil)
 	if err != nil {
-		log.Errorf("fetch :%s error, details: %s ~", tile, err)
+		fmt.Println("创建请求失败:", err)
+		return
+	}
+
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+	// req.Header.Set("Origin", "https://map.tianditu.gov.cn")
+	req.Header.Set("Referer", "https://jiangsu.tianditu.gov.cn")
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("发送请求失败:", err)
 		return
 	}
 	defer resp.Body.Close()
+	// resp, err := http.Get(tile)
+	// if err != nil {
+	// 	log.Errorf("fetch :%s error, details: %s ~", tile, err)
+	// 	return
+	// }
+	// defer resp.Body.Close()
 	if resp.StatusCode != 200 {
 		log.Errorf("fetch %v tile error, status code: %d ~", tile, resp.StatusCode)
 		return
 	}
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		log.Errorf("read %v tile error ~ %s", mt, err)
 		return
@@ -294,7 +318,7 @@ func (task *Task) tileFetcher(mt maptile.Tile, url string) {
 	log.Infof("tile(z:%d, x:%d, y:%d), %dms , %.2f kb, %s ...\n", mt.Z, mt.X, mt.Y, cost, float32(len(body))/1024.0, tile)
 }
 
-//DownloadZoom 下载指定层级
+// DownloadZoom 下载指定层级
 func (task *Task) downloadLayer(layer Layer) {
 	bar := pb.New64(layer.Count).Prefix(fmt.Sprintf("Zoom %d : ", layer.Zoom)).Postfix("\n")
 	// bar.SetRefreshRate(time.Second)
@@ -334,7 +358,7 @@ func (task *Task) downloadLayer(layer Layer) {
 	bar.FinishPrint(fmt.Sprintf("Task %s Zoom %d finished ~", task.ID, layer.Zoom))
 }
 
-//Download 开启下载任务
+// Download 开启下载任务
 func (task *Task) Download() {
 	//g orb.Geometry, minz int, maxz int
 	task.Bar = pb.New64(task.Total).Prefix("Task : ").Postfix("\n")
