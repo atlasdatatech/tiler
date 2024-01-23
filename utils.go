@@ -25,8 +25,7 @@ func saveToMBTile(tile Tile, db *sql.DB) error {
 }
 
 func saveToFiles(tile Tile, task *Task) error {
-	rootdir := filepath.Base(task.File)
-	dir := filepath.Join(rootdir, fmt.Sprintf(`%d`, tile.T.Z), fmt.Sprintf(`%d`, tile.T.X))
+	dir := filepath.Join(task.File, fmt.Sprintf(`%d`, tile.T.Z), fmt.Sprintf(`%d`, tile.T.X))
 	os.MkdirAll(dir, os.ModePerm)
 	fileName := filepath.Join(dir, fmt.Sprintf(`%d.%s`, tile.T.Y, task.TileMap.Format))
 	err := os.WriteFile(fileName, tile.C, os.ModePerm)

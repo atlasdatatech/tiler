@@ -260,8 +260,8 @@ func (task *Task) tileFetcher(mt maptile.Tile, url string) {
 	}
 
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-	// req.Header.Set("Origin", "https://map.tianditu.gov.cn")
-	req.Header.Set("Referer", "https://jiangsu.tianditu.gov.cn")
+	req.Header.Set("Referer", "https://map.tianditu.gov.cn")
+	// req.Header.Set("Referer", "https://jiangsu.tianditu.gov.cn")
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println("发送请求失败:", err)
@@ -367,6 +367,12 @@ func (task *Task) Download() {
 	task.Bar.Start()
 	if task.outformat == "mbtiles" {
 		task.SetupMBTileTables()
+	} else {
+		if task.File == "" {
+			outdir := viper.GetString("output.directory")
+			task.File = filepath.Join(outdir, fmt.Sprintf("%s-z%d-%d.%s", task.Name, task.Min, task.Max, task.ID))
+		}
+		os.MkdirAll(task.File, os.ModePerm)
 	}
 	go task.savePipe()
 	for _, layer := range task.Layers {

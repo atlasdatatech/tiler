@@ -44,3 +44,17 @@ A well-polished tile downloader
 - s 影像无标注
 - t 地形图
 - y 影像含标注
+
+
+## 天地图说明
+- 天地图影像,img_w
+  > url = "https://t0.tianditu.gov.cn/DataServer?T=img_w&x={x}&y={y}&l={z}&tk=75f0434f240669f4a2df6359275146d2"
+- 影像标注层,cia_w
+  > url = "https://t0.tianditu.gov.cn/DataServer?T=cia_w&x={x}&y={y}&l={z}&tk=75f0434f240669f4a2df6359275146d2"
+
+- 天地图矢量(地形图),vec_w
+  > url = "https://t0.tianditu.gov.cn/DataServer?T=vec_w&x={x}&y={y}&l={z}&tk=75f0434f240669f4a2df6359275146d2"
+- 矢量标注层,cva_w
+  > url = "https://t0.tianditu.gov.cn/DataServer?T=cva_w&x={x}&y={y}&l={z}&tk=75f0434f240669f4a2df6359275146d2"
+
+> 工具已经处理了天地图429限制，请合理使用！！！
